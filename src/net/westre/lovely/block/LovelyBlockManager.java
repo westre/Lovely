@@ -4,6 +4,7 @@ import net.westre.lovely.LovelyManager;
 import org.bukkit.block.Block;
 
 public class LovelyBlockManager extends LovelyManager<LovelyBlock, Block> {
+
     public LovelyBlockManager() {
         System.out.println("LovelyBlockManager created");
     }
@@ -12,4 +13,3 @@ public class LovelyBlockManager extends LovelyManager<LovelyBlock, Block> {
         return super.getAll().toString();
     }
 }
-

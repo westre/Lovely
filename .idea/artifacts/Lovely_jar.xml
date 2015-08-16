@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Lovely:jar">
+    <output-path>D:/Windows/Desktop/Minecraft Server/plugins</output-path>
+    <root id="archive" name="Lovely.jar">
+      <element id="module-output" name="Lovely" />
+    </root>
+  </artifact>
+</component>

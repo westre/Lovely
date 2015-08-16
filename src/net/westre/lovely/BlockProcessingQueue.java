@@ -1,19 +1,25 @@
 package net.westre.lovely;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import net.md_5.bungee.api.ChatColor;
 import net.westre.lovely.block.LovelyBlock;
 import org.bukkit.Bukkit;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
 public class BlockProcessingQueue {
+
     private Main main;
-    private ArrayList<LovelyBlock> insertBlocks = new ArrayList();
-    private ArrayList<LovelyBlock> removeBlocks = new ArrayList();
-    private ArrayList<LovelyBlock> updateBlocks = new ArrayList();
+    private ArrayList<LovelyBlock> insertBlocks;
+    private ArrayList<LovelyBlock> removeBlocks;
+    private ArrayList<LovelyBlock> updateBlocks;
 
     public BlockProcessingQueue(Main main) {
+        this.insertBlocks = new ArrayList<LovelyBlock>();
+        this.removeBlocks = new ArrayList<LovelyBlock>();
+        this.updateBlocks = new ArrayList<LovelyBlock>();
+
         this.main = main;
     }
 
@@ -26,9 +32,9 @@ public class BlockProcessingQueue {
     }
 
     public LovelyBlock getInsertedBlock(LovelyBlock lovelyBlock) {
-        for (LovelyBlock loopBlock : this.insertBlocks) {
-            if (!lovelyBlock.equals(loopBlock)) continue;
-            return loopBlock;
+        for(LovelyBlock loopBlock : this.insertBlocks) {
+            if(lovelyBlock.equals(loopBlock))
+                return loopBlock;
         }
         return null;
     }
@@ -38,73 +44,81 @@ public class BlockProcessingQueue {
     }
 
     public void process() {
-        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this.main, new Runnable() {
-
-            @Override
+        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(main, new Runnable() {
             public void run() {
-                ArrayList<LovelyBlock> blocksInsertProcess = new ArrayList<LovelyBlock>(BlockProcessingQueue.this.insertBlocks);
-                ArrayList<LovelyBlock> blocksRemoveProcess = new ArrayList<LovelyBlock>(BlockProcessingQueue.this.removeBlocks);
-                ArrayList<LovelyBlock> blocksUpdateProcess = new ArrayList<LovelyBlock>(BlockProcessingQueue.this.updateBlocks);
-                
+                ArrayList<LovelyBlock> blocksInsertProcess = new ArrayList<LovelyBlock>(insertBlocks);
+                ArrayList<LovelyBlock> blocksRemoveProcess = new ArrayList<LovelyBlock>(removeBlocks);
+                ArrayList<LovelyBlock> blocksUpdateProcess = new ArrayList<LovelyBlock>(updateBlocks);
+
                 try {
-                    PreparedStatement preparedStatement;
                     Main.getConnection().setAutoCommit(false);
+
                     String debugString = ChatColor.GRAY + "Processed ";
+
                     int processed = 0;
-                    for (LovelyBlock blockAction : blocksInsertProcess) {
-                        if (blockAction.isLocked() != null) {
+                    for(LovelyBlock block : blocksInsertProcess) {
+                        PreparedStatement preparedStatement;
+
+                        if(block.isLocked() != null) { // chest, door, etc.
                             preparedStatement = Main.getConnection().prepareStatement("INSERT INTO block (user_id, x, y, z, `type`, world, locked) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                            preparedStatement.setBoolean(7, blockAction.isLocked());
-                        } else {
+                            preparedStatement.setBoolean(7, block.isLocked());
+                        }
+                        else {
                             preparedStatement = Main.getConnection().prepareStatement("INSERT INTO block (user_id, x, y, z, `type`, world) VALUES (?, ?, ?, ?, ?, ?)");
                         }
-                        preparedStatement.setString(1, blockAction.getOwner().getLinkedObject().toString());
-                        preparedStatement.setInt(2, blockAction.getLinkedObject().getX());
-                        preparedStatement.setInt(3, blockAction.getLinkedObject().getY());
-                        preparedStatement.setInt(4, blockAction.getLinkedObject().getZ());
-                        preparedStatement.setString(5, blockAction.getLinkedObject().getType().name());
-                        preparedStatement.setString(6, blockAction.getLinkedObject().getWorld().getName());
+
+                        preparedStatement.setString(1, block.getOwner().getLinkedObject().toString());
+                        preparedStatement.setInt(2, block.getLinkedObject().getX());
+                        preparedStatement.setInt(3, block.getLinkedObject().getY());
+                        preparedStatement.setInt(4, block.getLinkedObject().getZ());
+                        preparedStatement.setString(5, block.getLinkedObject().getType().name());
+                        preparedStatement.setString(6, block.getLinkedObject().getWorld().getName());
                         preparedStatement.execute();
-                        ++processed;
+                        processed++;
                     }
-                    debugString = debugString + processed + " inserts, ";
+                    debugString += processed + " inserts, ";
+
+                    //System.out.println("Processed " + processed + " insert queries");
+
                     processed = 0;
-                    
-                    for (LovelyBlock blockAction : blocksUpdateProcess) {
-                        preparedStatement = Main.getConnection().prepareStatement("UPDATE block SET locked = ? WHERE x = ? AND y = ? AND z = ? AND world = ?");
-                        preparedStatement.setBoolean(1, blockAction.isLocked());
-                        preparedStatement.setInt(2, blockAction.getLinkedObject().getX());
-                        preparedStatement.setInt(3, blockAction.getLinkedObject().getY());
-                        preparedStatement.setInt(4, blockAction.getLinkedObject().getZ());
-                        preparedStatement.setString(5, blockAction.getLinkedObject().getWorld().getName());
+                    for(LovelyBlock block : blocksUpdateProcess) {
+                        PreparedStatement preparedStatement = Main.getConnection().prepareStatement("UPDATE block SET locked = ? WHERE x = ? AND y = ? AND z = ? AND world = ?");
+                        preparedStatement.setBoolean(1, block.isLocked());
+                        preparedStatement.setInt(2, block.getLinkedObject().getX());
+                        preparedStatement.setInt(3, block.getLinkedObject().getY());
+                        preparedStatement.setInt(4, block.getLinkedObject().getZ());
+                        preparedStatement.setString(5, block.getLinkedObject().getWorld().getName());
                         preparedStatement.execute();
-                        ++processed;
+                        processed++;
                     }
-                    debugString = debugString + processed + " updates, ";
+                    debugString += processed + " updates, ";
+
                     processed = 0;
-                    
-                    for (LovelyBlock blockAction : blocksRemoveProcess) {
-                        preparedStatement = Main.getConnection().prepareStatement("DELETE FROM block WHERE x = ? AND y = ? AND z = ? AND world = ?");
-                        preparedStatement.setInt(1, blockAction.getLinkedObject().getX());
-                        preparedStatement.setInt(2, blockAction.getLinkedObject().getY());
-                        preparedStatement.setInt(3, blockAction.getLinkedObject().getZ());
-                        preparedStatement.setString(4, blockAction.getLinkedObject().getWorld().getName());
+                    for(LovelyBlock block : blocksRemoveProcess) {
+                        PreparedStatement preparedStatement = Main.getConnection().prepareStatement("DELETE FROM block WHERE x = ? AND y = ? AND z = ? AND world = ?");
+                        preparedStatement.setInt(1, block.getLinkedObject().getX());
+                        preparedStatement.setInt(2, block.getLinkedObject().getY());
+                        preparedStatement.setInt(3, block.getLinkedObject().getZ());
+                        preparedStatement.setString(4, block.getLinkedObject().getWorld().getName());
                         preparedStatement.execute();
-                        ++processed;
+                        processed++;
                     }
-                    
-                    debugString = debugString + processed + " removals.";
-                    BlockProcessingQueue.this.insertBlocks.removeAll(blocksInsertProcess);
-                    BlockProcessingQueue.this.updateBlocks.removeAll(blocksUpdateProcess);
-                    BlockProcessingQueue.this.removeBlocks.removeAll(blocksRemoveProcess);
+                    debugString += processed + " removals.";
+
+                    //System.out.println("Processed " + processed + " delete queries");
+
+                    insertBlocks.removeAll(blocksInsertProcess);
+                    updateBlocks.removeAll(blocksUpdateProcess);
+                    removeBlocks.removeAll(blocksRemoveProcess);
+
+                    //System.out.println("Removed useless shit");
+                    //Bukkit.broadcastMessage(debugString);
+
                     Main.getConnection().commit();
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
-        }, 5, 150);
+        }, 100 / 20, 3000 / 20);
     }
-
 }
-

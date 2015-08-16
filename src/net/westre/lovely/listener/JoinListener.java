@@ -1,41 +1,45 @@
 package net.westre.lovely.listener;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.UUID;
 import net.westre.lovely.Main;
+import net.westre.lovely.Title;
 import net.westre.lovely.player.LovelyPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-public class JoinListener
-implements Listener {
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class JoinListener implements Listener {
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        this.initializePlayer(event.getPlayer());
+        initializePlayer(event.getPlayer());
     }
 
     public void initializePlayer(Player player) {
         System.out.println("SIZE: " + Main.getPlayerManager().getAll().size());
         LovelyPlayer lovelyPlayer = Main.getPlayerManager().get(player.getUniqueId());
 
-        if (lovelyPlayer == null) {
+        if(lovelyPlayer == null) {
             player.sendMessage("Welcome new player, a new account will be created for you!");
+
             try {
                 PreparedStatement preparedStatement = Main.getConnection().prepareStatement("INSERT INTO player (id, name) VALUES (?, ?)");
                 preparedStatement.setString(1, player.getUniqueId().toString());
                 preparedStatement.setString(2, player.getName());
                 preparedStatement.execute();
-            }
-            catch (SQLException e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
-            lovelyPlayer = new LovelyPlayer(Bukkit.getOfflinePlayer((UUID)player.getUniqueId()));
+
+            lovelyPlayer = new LovelyPlayer(Bukkit.getOfflinePlayer(player.getUniqueId()));
             lovelyPlayer.setMinutesPlayed(0);
             lovelyPlayer.setInPVPMode(false);
+
             Main.getPlayerManager().add(lovelyPlayer);
         }
         else {
@@ -44,7 +48,13 @@ implements Listener {
 
         lovelyPlayer.setPlayer(player);
         lovelyPlayer.updateDisplay();
-        Bukkit.broadcastMessage((String) "Welcome to the server!");
+
+        Bukkit.broadcastMessage("Welcome to the server!");
+
+        Title title = new Title("Welcome!", "", 2, 5, 2);
+        title.setSubtitle("Hello :)");
+        title.setTitleColor(ChatColor.RED);
+
+        title.send(player);
     }
 }
-

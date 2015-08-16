@@ -1,0 +1,32 @@
+For simple GUI's: http://www.spigotmc.org/threads/using-armorstands-riding-entities-as-nameplates.44809/
+http://www.spigotmc.org/threads/tutorial-holograms-1-8.65183/
+
+Players need to see if a player is in PVE or PVP: http://www.spigotmc.org/threads/changing-name-colors.67547/#post-745069
+
+Ranks
+
+empty = 0 to 1 hour
++ = 1 to 5 hours
+++ = 5 to 20 hours
++++ = 20 to 100 hours
+++++ = 100 to ... hours played
+
+<++ westre> message here
+
+Attack Points: points you have to destroy other PVP's players blocks
+You gain AP by: killing mobs, killing players, staying in PVP mode (offline & online) and maybe some more shit
+You lose AP by: destroying other blocks, dying
+Victim will get notification if he is being attacked
+- Offline victim = x10 cost modifier
+- Online victim = x1 cost modifier
+
+Changing PVE/PVP modes only near your bed
+
+When you kill a PVP player: a chest will spawn at the victim's location, only the victim can enter said chest
+Other chest of PVP player can be entered, takes a long time to enter
+
+PVE players normally
+PVE players when you die, maybe 5% of your placed blocks will be removed, or creepers will be spawned
+
+-----
+maybe a supply/demand system where you can exchange materials for AP

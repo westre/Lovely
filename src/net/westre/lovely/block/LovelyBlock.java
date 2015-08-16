@@ -5,6 +5,7 @@ import net.westre.lovely.player.LovelyPlayer;
 import org.bukkit.block.Block;
 
 public class LovelyBlock implements LovelyLinkable<Block> {
+
     private Block block;
     private LovelyPlayer owner;
     private Boolean locked;
@@ -14,9 +15,8 @@ public class LovelyBlock implements LovelyLinkable<Block> {
         this.owner = owner;
     }
 
-    @Override
     public Block getLinkedObject() {
-        return this.block;
+        return block;
     }
 
     public LovelyPlayer getOwner() {
@@ -31,4 +31,3 @@ public class LovelyBlock implements LovelyLinkable<Block> {
         this.locked = toggle;
     }
 }
-
